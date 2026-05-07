@@ -9,6 +9,7 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
 
+//Serve Pages
 app.get('/',function (req,res){
     res.sendFile(__dirname + '/pages/landing.html')
 })
@@ -21,9 +22,16 @@ app.get('/signup',function (req,res){
 app.get('/nook',function (req,res){
     res.sendFile(__dirname + '/pages/nook.html')
 })
+//Serve Public Files
 app.use('/scripts', express.static(__dirname + '/scripts'))
 app.use('/styles', express.static(__dirname + '/styles'))
 app.use('/images', express.static(__dirname + '/images'))
+//Serve the PWA manifest and service worker
+app.get('/manifest.json', function (req,res){
+    res.type('application/manifest+json')
+    res.sendFile(__dirname + '/manifest.json')
+})
+app.use('/service-worker.js', express.static(__dirname + '/service-worker.js'))
 
 io.on('connection',function(client){
     client.emit('ioconnect')
