@@ -4,8 +4,8 @@
   "start_url": "/nook",
   "scope":"/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#BFD8B4",
+  "theme_color": "#BFD8B4",
   "icons": [
   {
     "src": "/images/nookIcon192.png",
