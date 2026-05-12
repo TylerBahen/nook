@@ -11,7 +11,7 @@ const path = require('path');
 
 //Serve Pages
 app.get('/',function (req,res){
-    res.sendFile(__dirname + '/pages/landing.html')
+    res.sendFile(__dirname + '/pages/index.html')
 })
 app.get('/login',function (req,res){
     res.sendFile(__dirname + '/pages/login.html')
@@ -39,5 +39,5 @@ io.on('connection',function(client){
 
 server.listen(8889)
 console.log('Server listening on 8889')
-console.log('http://127.0.0.1:8889/nook')
+console.log('http://127.0.0.1:8889/')
 console.log(new Date(Date.now()).toString())
