@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Nook — Code Review</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Fraunces:ital,wght@0,400;0,600;1,400&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --border: #E2DDD6;
+    --text-primary: #1A1916;
+    --text-secondary: #6B6760;
+    --text-muted: #9D9A95;
+    --accent: #1A1916;
+    --red: #C0392B;
+    --red-bg: #FDF2F1;
+    --red-border: #F0C0BB;
+    --amber: #92580A;
+    --amber-bg: #FDF8EE;
+    --amber-border: #F0D99A;
+    --green: #2A6B3A;
+    --green-bg: #F0F7F2;
+    --green-border: #A8D5B5;
+    --blue: #1A4F8A;
+    --blue-bg: #EFF5FC;
+    --blue-border: #AECBEE;
+    --mono: 'IBM Plex Mono', monospace;
+    --serif: 'Fraunces', serif;
+  }
+
+  body {
+    font-family: var(--mono);
+    background: var(--bg);
+    color: var(--text-primary);
+    line-height: 1.6;
+    padding: 0;
+  }
+
+  /* Header */
+  .report-header {
+    background: var(--text-primary);
+    color: #F7F5F0;
+    padding: 3rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .report-header::after {
+    content: 'REVIEW';
+    position: absolute;
+    right: 3rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 7rem;
+    font-weight: 600;
+    font-family: var(--serif);
+    opacity: 0.06;
+    letter-spacing: -4px;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .report-meta {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #9D9A95;
+    margin-bottom: 1.25rem;
+  }
+  .report-title {
+    font-family: var(--serif);
+    font-size: 2.4rem;
+    font-weight: 400;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+    letter-spacing: -0.5px;
+  }
+  .report-title em { font-style: italic; color: #A8C5E8; }
+  .report-subtitle {
+    font-size: 13px;
+    color: #9D9A95;
+    max-width: 520px;
+  }
+
+  /* Score bar */
+  .score-bar {
+    display: flex;
+    gap: 1px;
+    margin-top: 2rem;
+    max-width: 340px;
+  }
+  .score-segment {
+    height: 4px;
+    flex: 1;
+    background: #333;
+    border-radius: 2px;
+  }
+  .score-segment.filled { background: #A8C5E8; }
+  .score-label {
+    margin-top: 8px;
+    font-size: 11px;
+    color: #9D9A95;
+    letter-spacing: 0.05em;
+  }
+
+  /* Layout */
+  .report-body {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3rem 2rem 5rem;
+  }
+
+  /* Summary row */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 3rem;
+  }
+  .summary-cell {
+    background: var(--surface);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .summary-cell-label {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .summary-cell-value {
+    font-family: var(--serif);
+    font-size: 1.9rem;
+    font-weight: 400;
+    line-height: 1;
+  }
+  .summary-cell-value.red { color: var(--red); }
+  .summary-cell-value.amber { color: var(--amber); }
+  .summary-cell-value.green { color: var(--green); }
+
+  /* Section header */
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin: 2.5rem 0 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-tag {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    min-width: 80px;
+  }
+  .section-title-text {
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    font-weight: 400;
+    font-style: italic;
+  }
+
+  /* Issue cards */
+  .issue-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    background: var(--surface);
+  }
+  .issue-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .priority-badge {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .priority-badge.high { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .priority-badge.medium { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .priority-badge.low { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .issue-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    flex: 1;
+  }
+  .issue-location {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    background: var(--bg);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .issue-body {
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .issue-description {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    max-width: 640px;
+  }
+  .issue-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .code-block {
+    background: #1A1916;
+    color: #E8E4DC;
+    border-radius: 7px;
+    padding: 1rem 1.25rem;
+    font-size: 12.5px;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-block .comment { color: #6B6760; }
+  .code-block .attr { color: #A8C5E8; }
+  .code-block .val { color: #C5A87A; }
+  .code-block .tag { color: #9DD6A8; }
+  .code-block .del { color: #E87070; text-decoration: line-through; opacity: 0.6; }
+  .code-block .add { color: #9DD6A8; }
+
+  /* Good items */
+  .good-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .good-item {
+    background: var(--surface);
+    padding: 1rem 1.25rem;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .good-check {
+    color: var(--green);
+    font-size: 14px;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+  .good-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .good-text strong {
+    color: var(--text-primary);
+    font-weight: 500;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  /* Checklist */
+  .checklist-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  .checklist-table th {
+    background: var(--bg);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+  }
+  .checklist-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    background: var(--surface);
+  }
+  .checklist-table tr:last-child td { border-bottom: none; }
+  .checklist-table td:first-child { width: 28px; }
+  .cb { width: 16px; height: 16px; border: 1.5px solid var(--border); border-radius: 4px; display: block; }
+  .item-name { color: var(--text-primary); font-weight: 500; display: block; }
+  .item-area { color: var(--text-muted); font-size: 11px; }
+
+  /* Footer */
+  .report-footer {
+    border-top: 1px solid var(--border);
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<div class="report-header">
+  <p class="report-meta">Code Review · index.html · Nook Landing Page</p>
+  <h1 class="report-title">Pre-deployment review<br/>for <em>Nook</em></h1>
+  <p class="report-subtitle">10 findings across structure, SEO, accessibility, and security. Prioritised for a senior developer handoff.</p>
+  <div class="score-bar">
+    <div class="score-segment filled"></div>
+    <div class="score-segment filled"></div>
+    <div class="score-segment filled"></div>
+    <div class="score-segment filled"></div>
+    <div class="score-segment filled"></div>
+    <div class="score-segment filled"></div>
+    <div class="score-segment filled"></div>
+    <div class="score-segment"></div>
+    <div class="score-segment"></div>
+    <div class="score-segment"></div>
+  </div>
+  <p class="score-label">7 / 10 — Good foundation. Ship after fixes.</p>
+</div>
+
+<div class="report-body">
+
+  <!-- Summary -->
+  <div class="summary-grid">
+    <div class="summary-cell">
+      <span class="summary-cell-label">Critical</span>
+      <span class="summary-cell-value red">4</span>
+    </div>
+    <div class="summary-cell">
+      <span class="summary-cell-label">Medium</span>
+      <span class="summary-cell-value amber">4</span>
+    </div>
+    <div class="summary-cell">
+      <span class="summary-cell-label">Low</span>
+      <span class="summary-cell-value green">2</span>
+    </div>
+    <div class="summary-cell">
+      <span class="summary-cell-label">Passing</span>
+      <span class="summary-cell-value" style="color: var(--text-primary)">6</span>
+    </div>
+  </div>
+
+  <!-- What's passing -->
+  <div class="section-header">
+    <span class="section-tag">Passing</span>
+    <span class="section-title-text">What's already working</span>
+  </div>
+
+  <div class="good-grid">
+    <div class="good-item">
+      <span class="good-check">✓</span>
+      <div class="good-text"><strong>Valid document shell</strong>DOCTYPE, lang, charset, viewport — all correct.</div>
+    </div>
+    <div class="good-item">
+      <span class="good-check">✓</span>
+      <div class="good-text"><strong>Heading hierarchy</strong>h1 → h2 → h3 flows correctly throughout.</div>
+    </div>
+    <div class="good-item">
+      <span class="good-check">✓</span>
+      <div class="good-text"><strong>Semantic landmarks</strong>nav, section, footer used correctly — no div soup.</div>
+    </div>
+    <div class="good-item">
+      <span class="good-check">✓</span>
+      <div class="good-text"><strong>Internal anchor link</strong>#how in hero links to id="how" on the section cleanly.</div>
+    </div>
+    <div class="good-item">
+      <span class="good-check">✓</span>
+      <div class="good-text"><strong>No inline scripts</strong>CSS is external — reduces XSS attack surface.</div>
+    </div>
+    <div class="good-item">
+      <span class="good-check">✓</span>
+      <div class="good-text"><strong>Title tag present</strong>"Nook - Your People, Together" is descriptive and present.</div>
+    </div>
+  </div>
+
+  <!-- SEO -->
+  <div class="section-header">
+    <span class="section-tag">SEO</span>
+    <span class="section-title-text">Search visibility issues</span>
+  </div>
+
+  <div class="issue-card">
+    <div class="issue-card-header">
+      <span class="priority-badge high">High · Must fix</span>
+      <span class="issue-title">No meta description tag</span>
+      <span class="issue-location">&lt;head&gt;</span>
+    </div>
+    <div class="issue-body">
+      <p class="issue-description">Google uses this as the snippet text in search results. Without it, Google picks arbitrary text from the page — usually something unhelpful. This is the single highest-impact SEO tag missing.</p>
+      <p class="issue-label">Add inside &lt;head&gt;</p>
+      <div class="code-block"><span class="tag">&lt;meta</span> <span class="attr">name</span>=<span class="val">"description"</span>
+      <span class="attr">content</span>=<span class="val">"Nook is a warm, intentional community platform
+      where you share your life with the people that matter —
+      no algorithms, no ads."</span> <span class="tag">/&gt;</span></div>
+    </div>
+  </div>
+
+  <div class="issue-card">
+    <div class="issue-card-header">
+      <span class="priority-badge high">High · Must fix</span>
+      <span class="issue-title">Lorem ipsum placeholder text in "How it works"</span>
+      <span class="issue-location">.steps</span>
+    </div>
+    <div class="issue-body">
+      <p class="issue-description">Search engines index and display this dummy text. It actively hurts rankings and credibility. Replace all three step descriptions with real copy before deployment.</p>
+      <p class="issue-label">Example replacement</p>
+      <div class="code-block"><span class="del">&lt;p class="step-desc"&gt;Lorem ipsum dolor sit amet...&lt;/p&gt;</span>
+
+<span class="add">&lt;p class="step-desc"&gt;Tell us a little about yourself —
+your name, a photo, and the topics
+you care about most.&lt;/p&gt;</span></div>
+    </div>
+  </div>
+
+  <div class="issue-card">
+    <div class="issue-card-header">
+      <span class="priority-badge medium">Medium</span>
+      <span class="issue-title">Missing Open Graph tags</span>
+      <span class="issue-location">&lt;head&gt;</span>
+    </div>
+    <div class="issue-body">
+      <p class="issue-description">When the URL is shared on Slack, iMessage, Discord, or social media, platforms read Open Graph tags to build a preview card. Without them, the link renders as a bare URL.</p>
+      <p class="issue-label">Add inside &lt;head&gt;</p>
+      <div class="code-block"><span class="tag">&lt;meta</span> <span class="attr">property</span>=<span class="val">"og:title"</span>      <span class="attr">content</span>=<span class="val">"Nook — Your People, Together"</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;meta</span> <span class="attr">property</span>=<span class="val">"og:description"</span> <span class="attr">content</span>=<span class="val">"A warm, intentional community for real connection."</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;meta</span> <span class="attr">property</span>=<span class="val">"og:type"</span>        <span class="attr">content</span>=<span class="val">"website"</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;meta</span> <span class="attr">property</span>=<span class="val">"og:url"</span>         <span class="attr">content</span>=<span class="val">"https://yournookdomain.com"</span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;meta</span> <span class="attr">property</span>=<span class="val">"og:image"</span>       <span class="attr">content</span>=<span class="val">"https://yournookdomain.com/og-image.png"</span> <span class="tag">/&gt;</span></div>
+    </div>
+  </div>
+
+  <div class="issue-card">
+    <div class="issue-card-header">
+      <span class="priority-badge medium">Medium</span>
+      <span class="issue-title">Missing canonical link</span>
+      <span class="issue-location">&lt;head&gt;</span>
+    </div>
+    <div class="issue-body">
+      <p class="issue-description">Tells search engines which URL is the definitive version of this page. Prevents duplicate content penalties if the page is accessible from multiple URLs (e.g. with/without www, with/without trailing slash).</p>
+      <p class="issue-label">Add inside &lt;head&gt;</p>
+      <div class="code-block"><span class="tag">&lt;link</span> <span class="attr">rel</span>=<span class="val">"canonical"</span> <span class="attr">href</span>=<span class="val">"https://yournookdomain.com"</span> <span class="tag">/&gt;</span></div>
+    </div>
+  </div>
+
+  <!-- Accessibility -->
+  <div class="section-header">
+    <span class="section-tag">Accessibility</span>
+    <span class="section-title-text">Screen reader and keyboard issues</span>
+  </div>
+
+  <div class="issue-card">
+    <div class="issue-card-header">
+      <span class="priority-badge medium">Medium</span>
+      <span class="issue-title">Emoji icons have no accessible labels</span>
+      <span class="issue-location">.feature-icon</span>
+    </div>
+    <div class="issue-body">
+      <p class="issue-description">Screen readers announce raw emoji descriptions ("house building", "bouquet"). Adding role="img" and aria-label gives assistive tech a clean, intentional label instead.</p>
+      <p class="issue-label">Current (all four feature icons)</p>
+      <div class="code-block"><span class="del">&lt;span class="feature-icon"&gt;&amp;#127969;&lt;/span&gt;</span>
+
+<span class="add">&lt;span class="feature-icon" role="img" aria-label="House"&gt;&amp;#127969;&lt;/span&gt;</span>
+<span class="add">&lt;span class="feature-icon" role="img" aria-label="Plant"&gt;&amp;#127807;&lt;/span&gt;</span>
+<span class="add">&lt;span class="feature-icon" role="img" aria-label="Handshake"&gt;&amp;#129309;&lt;/span&gt;</span>
+<span class="add">&lt;span class="feature-icon" role="img" aria-label="Lock"&gt;&amp;#128274;&lt;/span&gt;</span></div>
+    </div>
+  </div>
+
+  <div class="issue-card">
+    <div class="issue-card-header">
+      <span class="priority-badge medium">Medium</span>
+      <span class="issue-title">Logo links have no descriptive label</span>
+      <span class="issue-location">nav · footer</span>
+    </div>
+    <div class="issue-body">
+      <p class="issue-description">Screen readers will announce these as "link" with no destination context. Add aria-label to both the nav and footer logos.</p>
+      <p class="issue-label">Nav logo</p>
+      <div class="code-block"><span class="del">&lt;a href="#" class="nav-logo"&gt;n&lt;span&gt;oo&lt;/span&gt;k&lt;/a&gt;</span>
+
+<span class="add">&lt;a href="/" class="nav-logo" aria-label="Nook home"&gt;n&lt;span&gt;oo&lt;/span&gt;k&lt;/a&gt;</span></div>
+      <p class="issue-label">Footer logo</p>
+      <div class="code-block"><span class="del">&lt;a href="#" class="footer-logo"&gt;n&lt;span&gt;oo&lt;/span&gt;k&lt;/a&gt;</span>
+
+<span class="add">&lt;a href="/" class="footer-logo" aria-label="Nook home"&gt;n&lt;span&gt;oo&lt;/span&gt;k&lt;/a&gt;</span></div>
+    </div>
+  </div>
+
+  <div class="issue-card">
+    <div class="issue-card-header">
+      <span class="priority-badge low">Low</span>
+      <span class="issue-title">Nav element missing aria-label</span>
+      <span class="issue-location">&lt;nav&gt;</span>
+    </div>
+    <div class="issue-body">
+      <p class="issue-description">If the page ever gains a secondary nav (e.g. footer nav), screen reader users won't be able to distinguish them. Label it now.</p>
+      <p class="issue-label">Fix</p>
+      <div class="code-block"><span class="del">&lt;nav&gt;</span>
+
+<span class="add">&lt;nav aria-label="Main navigation"&gt;</span></div>
+    </div>
+  </div>
+
+  <!-- Security -->
+  <div class="section-header">
+    <span class="section-tag">Security</span>
+    <span class="section-title-text">Pre-deployment security items</span>
+  </div>
+
+  <div class="issue-card">
+    <div class="issue-card-header">
+      <span class="priority-badge high">High · Must fix</span>
+      <span class="issue-title">HTTPS must be confirmed on the host</span>
+      <span class="issue-location">Hosting config</span>
+    </div>
+    <div class="issue-body">
+      <p class="issue-description">Browsers show a "Not Secure" warning on HTTP sites, which immediately destroys trust — especially critical for a platform asking users to sign up. Most hosts (Netlify, Vercel, GitHub Pages) handle this automatically. Verify it is enabled before going live.</p>
+      <p class="issue-label">Verification checklist</p>
+      <div class="code-block"><span class="comment"># Confirm these on your host's dashboard:</span>
+<span class="add">✓</span> SSL/TLS certificate issued and active
+<span class="add">✓</span> HTTP → HTTPS redirect enabled (301)
+<span class="add">✓</span> HSTS header set (Strict-Transport-Security)</div>
+    </div>
+  </div>
+
+  <div class="issue-card">
+    <div class="issue-card-header">
+      <span class="priority-badge high">High · Must fix</span>
+      <span class="issue-title">/login and /signup pages need full security review</span>
+      <span class="issue-location">/login · /signup</span>
+    </div>
+    <div class="issue-body">
+      <p class="issue-description">These routes are linked from the landing page but not part of this review. Before deployment, confirm the following are implemented on those pages.</p>
+      <p class="issue-label">Required checklist for auth pages</p>
+      <div class="code-block"><span class="comment"># Authentication security requirements</span>
+<span class="add">✓</span> Input validation on all form fields (server-side, not just client)
+<span class="add">✓</span> CSRF tokens on all POST forms
+<span class="add">✓</span> Rate limiting on login attempts (e.g. 5 tries, then lockout)
+<span class="add">✓</span> Passwords hashed with bcrypt / argon2 — never plain text
+<span class="add">✓</span> Error messages are generic ("Invalid credentials", not "Wrong password")
+<span class="add">✓</span> Session tokens rotated on login</div>
+    </div>
+  </div>
+
+  <div class="issue-card">
+    <div class="issue-card-header">
+      <span class="priority-badge low">Low</span>
+      <span class="issue-title">href="#" placeholder links</span>
+      <span class="issue-location">nav · footer logo</span>
+    </div>
+    <div class="issue-body">
+      <p class="issue-description">Both the nav and footer logo links use href="#" as a placeholder. This causes the page to scroll to the top unexpectedly on click, and is a minor SEO signal issue. Replace with the actual root path before deployment.</p>
+      <p class="issue-label">Fix</p>
+      <div class="code-block"><span class="del">href="#"</span>  <span class="comment">→ replace with →</span>  <span class="add">href="/"</span></div>
+    </div>
+  </div>
+
+  <!-- Deployment checklist -->
+  <div class="section-header">
+    <span class="section-tag">Checklist</span>
+    <span class="section-title-text">Print and tick off before shipping</span>
+  </div>
+
+  <table class="checklist-table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Item</th>
+        <th>Area</th>
+        <th>Priority</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="cb"></span></td>
+        <td><span class="item-name">Add meta description tag</span></td>
+        <td><span class="item-area">SEO</span></td>
+        <td><span class="priority-badge high" style="display:inline-block">High</span></td>
+      </tr>
+      <tr>
+        <td><span class="cb"></span></td>
+        <td><span class="item-name">Replace lorem ipsum placeholder text</span></td>
+        <td><span class="item-area">SEO / Content</span></td>
+        <td><span class="priority-badge high" style="display:inline-block">High</span></td>
+      </tr>
+      <tr>
+        <td><span class="cb"></span></td>
+        <td><span class="item-name">Confirm HTTPS on hosting</span></td>
+        <td><span class="item-area">Security</span></td>
+        <td><span class="priority-badge high" style="display:inline-block">High</span></td>
+      </tr>
+      <tr>
+        <td><span class="cb"></span></td>
+        <td><span class="item-name">Security audit /login and /signup pages</span></td>
+        <td><span class="item-area">Security</span></td>
+        <td><span class="priority-badge high" style="display:inline-block">High</span></td>
+      </tr>
+      <tr>
+        <td><span class="cb"></span></td>
+        <td><span class="item-name">Add Open Graph meta tags</span></td>
+        <td><span class="item-area">SEO</span></td>
+        <td><span class="priority-badge medium" style="display:inline-block">Medium</span></td>
+      </tr>
+      <tr>
+        <td><span class="cb"></span></td>
+        <td><span class="item-name">Add canonical link tag</span></td>
+        <td><span class="item-area">SEO</span></td>
+        <td><span class="priority-badge medium" style="display:inline-block">Medium</span></td>
+      </tr>
+      <tr>
+        <td><span class="cb"></span></td>
+        <td><span class="item-name">Add aria-label to emoji icons</span></td>
+        <td><span class="item-area">Accessibility</span></td>
+        <td><span class="priority-badge medium" style="display:inline-block">Medium</span></td>
+      </tr>
+      <tr>
+        <td><span class="cb"></span></td>
+        <td><span class="item-name">Add aria-label to nav and footer logos</span></td>
+        <td><span class="item-area">Accessibility</span></td>
+        <td><span class="priority-badge medium" style="display:inline-block">Medium</span></td>
+      </tr>
+      <tr>
+        <td><span class="cb"></span></td>
+        <td><span class="item-name">Add aria-label to &lt;nav&gt;</span></td>
+        <td><span class="item-area">Accessibility</span></td>
+        <td><span class="priority-badge low" style="display:inline-block">Low</span></td>
+      </tr>
+      <tr>
+        <td><span class="cb"></span></td>
+        <td><span class="item-name">Replace href="#" with href="/" on logos</span></td>
+        <td><span class="item-area">Structure</span></td>
+        <td><span class="priority-badge low" style="display:inline-block">Low</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="report-footer">
+    <span>Nook · index.html · Pre-deployment review</span>
+    <span>May 2026</span>
+  </div>
+
+</div>
+</body>
+</html>
