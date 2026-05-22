@@ -15,9 +15,11 @@ app.get('/',function (req,res){
 })
 app.get('/login',function (req,res){
     res.sendFile(__dirname + '/pages/login.html')
+    console.log('User Logging In...')
 })
 app.get('/signup',function (req,res){
     res.sendFile(__dirname + '/pages/signup.html')
+    console.log('User Signing Up...')
 })
 app.get('/nook',function (req,res){
     res.sendFile(__dirname + '/pages/nook.html')
@@ -33,8 +35,20 @@ app.get('/manifest.json', function (req,res){
 })
 app.use('/service-worker.js', express.static(__dirname + '/service-worker.js'))
 
+
+
 io.on('connection',function(client){
     client.emit('ioconnect')
+    client.on('register',(user,pass,callback) => {
+        console.log(user)
+        console.log(pass)
+        callback(true)
+    })
+    client.on('login',(user,pass,callback) => {
+        console.log(user)
+        console.log(pass)
+        callback(true)
+    })
 })
 
 server.listen(8889)
