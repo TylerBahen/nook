@@ -9,6 +9,19 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
 
+
+//database init
+var admin = require("firebase-admin");
+
+var serviceAccount = require("./creds.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+const db = admin.firestore()
+
+
 //Serve Pages
 app.get('/',function (req,res){
     res.sendFile(__dirname + '/pages/index.html')
@@ -40,9 +53,15 @@ app.use('/service-worker.js', express.static(__dirname + '/service-worker.js'))
 io.on('connection',function(client){
     client.emit('ioconnect')
     client.on('register',(user,pass,callback) => {
-        console.log(user)
-        console.log(pass)
-        callback(true)
+        db.collection('users').where('username','==',user).get().then(((matches) => {
+            if (matches.empty){
+                db.collection('users').add({username:user,password:pass}).then(() => {
+                    callback(true)
+                })
+            } else {
+                callback(false,'Your username is already taken')
+            }
+        }))
     })
     client.on('login',(user,pass,callback) => {
         console.log(user)
