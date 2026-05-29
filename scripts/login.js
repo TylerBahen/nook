@@ -6,14 +6,17 @@ function signup(event,form){
     const pass = form.password.value
     const pass2 = form.password2.value
     if (pass!=pass2){
-        alert('Your passwords do not match. Please try again.')
+        alert('Your passwords do not match.')
     } else {
-        socket.emit('register',user,pass,(success, message = null) => {
+        form.querySelector('button[type="submit"]').disabled = true
+        socket.emit('register',user,pass,(success, message) => {
             if(success){
-                alert('Registration Successful')
+                alert('Registration Successful!\nWelcome to Nook')
+                localStorage.setItem('sessionToken',message)
                 window.location.href = '/nook'
             } else {
                 alert(message)
+                form.querySelector('button[type="submit"]').disabled = false
             }
         })
     }
@@ -21,12 +24,16 @@ function signup(event,form){
 
 function login(event,form){
     event.preventDefault()
+    form.querySelector('button[type="submit"]').disabled = true
     const user = form.username.value
     const pass = form.password.value
-    socket.emit('login',user,pass,(success,message = null)=>{
+    socket.emit('login',user,pass,(success,message)=>{
         if (success){
-            alert('Login Succesful')
+            localStorage.setItem('sessionToken',message)
             window.location.href = '/nook'
+        } else {
+            alert(message)
+            form.querySelector('button[type="submit"]').disabled = false
         }
     })
 }
