@@ -10,7 +10,7 @@ function load() {
     if(!success){
       window.location.href = '/login'
     } else {
-      //Do all the onload things
+      //Do all the onload things...
     }
   })
 }

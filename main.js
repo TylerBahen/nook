@@ -13,7 +13,13 @@ var crypto = require('crypto')
 
 //database stuff
 var admin = require("firebase-admin");
-var serviceAccount = require("./creds.json");
+var serviceAccount = process.env.CREDS
+if (serviceAccount==undefined){
+    serviceAccount = require("./creds.json");
+} else {
+    serviceAccount = JSON.parse(serviceAccount)
+    console.log('Found CREDS in env')
+}
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
