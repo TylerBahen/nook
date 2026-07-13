@@ -60,24 +60,28 @@ io.on('connection',function(client){
         if (typeof user != 'string' || typeof pass != 'string') {
             callback(false, 'Invalid input types.');
         } else {
-            dbQuery(user).then(((data) => {
-                if (data==null){
-                    db.collection('users').doc(user).set({
-                        username:user,
-                        password:hashPassword(pass),
-                        network:{friends:[],requests:[],sents:[]},
-                        messages:[]
-                    }).then(() => {
-                        const token = newSessionToken(user)
-                        callback(true,token)
-                    })
-                } else {
-                    callback(false,'Your username is already taken')
-                }
-            })).catch((error) => {
-                console.error("Database error:", error);
-                callback(false, 'An error occurred during sign-in.')
-            })
+            if(user.includes('>') || user.includes('<') || user.includes('&') || user.includes("'") || user.includes('"')){
+                callback(false,`One or more invalid characters in username\n(<,>,&,',")`)
+            } else {
+                dbQuery(user).then(((data) => {
+                    if (data==null){
+                        db.collection('users').doc(user).set({
+                            username:user,
+                            password:hashPassword(pass),
+                            network:{friends:[],requests:[],sents:[]},
+                            messages:[{author:"Nook",content:"Welcome to Nook!"}]
+                        }).then(() => {
+                            const token = newSessionToken(user)
+                            callback(true,token)
+                        })
+                    } else {
+                        callback(false,'Your username is already taken')
+                    }
+                })).catch((error) => {
+                    console.error("Database error:", error);
+                    callback(false, 'An error occurred during sign-in.')
+                })
+            }
         }
     })
     client.on('login',(user,pass,callback) => {
@@ -120,23 +124,66 @@ io.on('connection',function(client){
         const user = tokenSession(token)
         if (user==null){
             callback(false,'User session expired, please refresh your page.')
+        } else if (target==user){
+            callback(false,'You cannot friend yourself.')
         } else {
             console.log(`${user} is sending a friend request to ${target}`)
-            dbQuery(target).then(((data) => {
-                if (data==null){
-                    callback(false,'The specified user does not exist.')
-                } else {
-                    if (action=='send'){
-                        //"Let's just be friends," she said...
-                        let friends = {...data.network}
-                        friends.requests.push(user)
-                        dbUpdate(target,{network:friends})
-                        callback(true)
-                    } else if (action=='accept'){
-                        //Accept Frend Request
+            dbQuery(target).then((targetdata) => {
+                dbQuery(user).then((userdata) => {
+                    if (targetdata==null){
+                        callback(false,'The specified user does not exist.')
+                    } else {
+                        if (action=='send'){
+                            //"Let's just be friends," she said...
+                            let friends = {...targetdata.network}
+                            if(friends.requests.includes(user)){
+                                callback(false,'You already sent them an invitation.')
+                            } else if (friends.friends.includes(user)){
+                                callback(false,'You are already freinds!')
+                            } else {
+                                friends.requests.push(user)
+                                dbUpdate(target,{network:friends})
+                                callback(true)
+                            }
+                        } else if (action=='accept'){
+                            if (userdata.network.requests.includes(target)){
+                                let targetfriends = {...targetdata.network}
+                                let userfriends = {...userdata.network}
+                                const tid = targetfriends.requests.indexOf(user)
+                                const uid = userfriends.requests.indexOf(target)
+                                if (tid!=-1) {targetfriends.requests.splice(tid,1)}
+                                if (uid!=-1) {userfriends.requests.splice(uid,1)}
+                                targetfriends.friends.unshift(user)
+                                userfriends.friends.unshift(target)
+                                dbUpdate(user,{network:userfriends})
+                                dbUpdate(target,{network:targetfriends})
+                                callback(true)
+                            } else {
+                                callback(false,'You cannot accept a request that was never extended.')
+                            }
+                        }
                     }
-                }
-            }))
+                })
+            })
+        }
+    })
+    client.on('post',(post,token,callback) => {
+        const user = tokenSession(token)
+        if (user==null){
+            callback(false,'User session expired, please refresh your page.')
+        } else {
+            const message = {author:user,content:sanitize(post)}
+            console.log(message)
+            dbQuery(user).then(userdata => {
+                userdata.network.friends.forEach(friend => {
+                    dbQuery(friend).then(frienddata => {
+                        let inbox = frienddata.messages
+                        inbox.unshift(message)
+                        dbUpdate(friend,{messages:inbox})
+                    })
+                })
+            })
+            callback(true)
         }
     })
 })
