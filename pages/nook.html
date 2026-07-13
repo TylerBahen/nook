@@ -12,13 +12,52 @@
 </head>
 <body onload="load()">
     <header>
-        Nook logo here
+        <a href="#" class="nav-logo">n<span>oo</span>k</a>
+        <div class="nav-actions">
+            <span id="user-display-name" class="username">Loading...</span>
+            <button id="profile-toggle-btn" class="profile-icon" aria-label="Open Profile">
+                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </button>
+        </div>
     </header>
+
     <main>
-        <!---->
+        <section id="messages-section" class="panel">
+            <h2>Messages</h2>
+            
+            <div id="messages-container">
+                <div class="message-tile">
+                    <div class="message-avatar"></div>
+                    <div class="message-content">
+                        <strong>Tom Nook</strong>
+                        <p>Yes, yes! Your loan payment is due.</p>
+                    </div>
+                </div>
+            </div>
+
+            <button id="new-message-btn" class="fab" aria-label="Create New Message">+</button>
+        </section>
+
+        <section id="friends-section" class="panel">
+            <h2>Friends</h2>
+            
+            <div class="search-container">
+                <input type="text" id="friend-search" class="search-bar" placeholder="Find new friends...">
+            </div>
+
+            <ul id="friends-list">
+                <li class="friend-item">
+                    <div class="friend-avatar"></div>
+                    <span class="friend-name">Isabelle</span>
+                </li>
+            </ul>
+        </section>
     </main>
+
     <footer>
-        <!---->
-    </footer>
+        </footer>
 </body>
 </html>

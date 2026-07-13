@@ -60,9 +60,14 @@ io.on('connection',function(client){
         if (typeof user != 'string' || typeof pass != 'string') {
             callback(false, 'Invalid input types.');
         } else {
-            db.collection('users').where('username','==',user).get().then(((matches) => {
-                if (matches.empty){
-                    db.collection('users').add({username:user,password:hashPassword(pass)}).then(() => {
+            dbQuery(user).then(((data) => {
+                if (data==null){
+                    db.collection('users').doc(user).set({
+                        username:user,
+                        password:hashPassword(pass),
+                        network:{friends:[],requests:[],sents:[]},
+                        messages:[]
+                    }).then(() => {
                         const token = newSessionToken(user)
                         callback(true,token)
                     })
@@ -79,12 +84,11 @@ io.on('connection',function(client){
         if (typeof user != 'string' || typeof pass != 'string') {
             callback(false, 'Invalid input types.');
         } else {
-            db.collection('users').where('username','==',user).get().then(((matches) => {
-                if (matches.empty){
+            dbQuery(user).then(((data) => {
+                if (data==null){
                     callback(false,'Your username and password either do not match, or do not exist.')
                 } else {
-                    const doc = matches.docs[0].data()
-                    if (verifyHashedPassword(pass,doc.password)){
+                    if (verifyHashedPassword(pass,data.password)){
                         const token = newSessionToken(user)
                         callback(true,token)
                     } else {
@@ -100,10 +104,39 @@ io.on('connection',function(client){
     client.on('sessionStart',(token,callback) => {
         const session = tokenSession(token)
         if (session!=null){
-            callback(true)
+            callback(true,session)
             console.log(`User Authenticated : ${session}`)
+            dbQuery(session).then(data => {
+                client.emit('startpacket',{
+                    messages:data.messages,
+                    network:data.network
+                })
+            })
         } else {
             callback(false)
+        }
+    })
+    client.on('friend',(action,target,token,callback) => {
+        const user = tokenSession(token)
+        if (user==null){
+            callback(false,'User session expired, please refresh your page.')
+        } else {
+            console.log(`${user} is sending a friend request to ${target}`)
+            dbQuery(target).then(((data) => {
+                if (data==null){
+                    callback(false,'The specified user does not exist.')
+                } else {
+                    if (action=='send'){
+                        //"Let's just be friends," she said...
+                        let friends = {...data.network}
+                        friends.requests.push(user)
+                        dbUpdate(target,{network:friends})
+                        callback(true)
+                    } else if (action=='accept'){
+                        //Accept Frend Request
+                    }
+                }
+            }))
         }
     })
 })
@@ -116,6 +149,18 @@ console.log(new Date(Date.now()).toString())
 
 
 
+//Database Handling
+async function dbQuery(id) {
+    const ref = db.collection('users').doc(id)
+    const snap = await ref.get()
+
+    if (!snap.exists) return null
+    return { ...snap.data() }
+}
+async function dbUpdate(id,data){
+    const out = await db.collection('users').doc(id).update(data)
+    return out
+}
 
 //Session Handling
 var sessions = {}

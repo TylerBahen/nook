@@ -1,20 +1,261 @@
+/* --- Global Reset & Layout --- */
 body {
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    background-color: var(--white);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ensures body takes full screen height */
+}
+
+/* --- Header Styling --- */
+header {
+    width: 100%;
+    background-color: var(--primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Centers items vertically */
+    padding: 0.75rem 2rem; 
+    box-sizing: border-box; /* Ensures padding doesn't widen the element past 100% */
+    border-bottom: 2px solid var(--offwhite-dark);
+}
+
+.nav-logo {
+    font-family: 'Coming Soon', cursive;
+    font-size: 26px;
+    color: var(--darkgreen);
+    letter-spacing: 1px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.nav-logo span { 
+    color: var(--brown); 
+}
+
+/* --- Profile Action Area --- */
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Space between username and icon */
+}
+
+.username {
+    color: var(--text-dark);
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.profile-icon {
+    background: var(--offwhite);
+    border: 2px solid var(--darkgreen);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    color: var(--darkgreen);
+    transition: background-color 0.2s ease;
+}
+
+.profile-icon:hover {
+    background: var(--primary);
+}
+
+/* --- Main Content Area (Mobile First) --- */
+main {
+    flex: 1; /* Tells main to take up all available space between header and footer */
+    display: flex;
+    flex-direction: column; /* Stacks panels vertically on mobile */
+    gap: 1.5rem;
+    padding: 1.5rem;
+    box-sizing: border-box;
+}
+
+.panel {
+    background-color: var(--offwhite);
+    border: 1px solid var(--offwhite-dark);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.panel h2 {
+    margin-top: 0;
+    color: var(--darkgreen);
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 0.5rem;
+}
+
+/* --- Responsive Desktop Layout --- */
+@media (min-width: 768px) {
+    main {
+        flex-direction: row; /* Switches to side-by-side columns on larger screens */
+    }
+
+    #messages-section {
+        flex: 2; /* Gives the messages area twice the width of the friends area */
+    }
+
+    #friends-section {
+        flex: 1; 
+    }
+}
+
+/* --- Footer Styling --- */
+footer {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--primary);
+    box-sizing: border-box;
+    border-top: 2px solid var(--offwhite-dark);
+}
+
+/* --- Panel Updates for Scrolling & FAB --- */
+.panel {
+    /* Adding to your existing .panel class */
+    position: relative; /* Crucial: Keeps the absolute FAB inside this container */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Keeps the scrolling inside the borders */
+}
+
+#messages-container, #friends-list {
+    flex: 1; /* Pushes containers to fill available space */
+    overflow-y: auto; /* Adds a scrollbar ONLY when content overflows */
+    padding-right: 0.5rem; /* Little breathing room for the scrollbar */
+}
+
+/* Removes default bullets from the ul */
+#friends-list {
+    list-style: none;
     margin: 0;
     padding: 0;
 }
 
-header {
-    width: 100%;
+/* --- Floating Action Button (+) --- */
+.fab {
     position: absolute;
-    top: 0px;
-    height: 10%;
-    background-color: var(--primary);
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--lightgreen);
+    color: var(--white);
+    font-size: 28px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(24, 64, 18, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    z-index: 10;
 }
 
-footer {
+.fab:hover {
+    background-color: var(--darkgreen);
+    transform: scale(1.05); /* Slight "pop" effect on hover */
+}
+
+/* --- Friend Search Bar --- */
+.search-container {
+    margin-bottom: 1rem;
+}
+
+.search-bar {
     width: 100%;
-    position: absolute;
-    bottom: 0px;
-    height: 10%;
-    background-color: var(--primary);
+    padding: 0.6rem 1rem;
+    border: 2px solid var(--offwhite-dark);
+    border-radius: 20px; /* Cute pill shape */
+    background-color: var(--white);
+    color: var(--text-dark);
+    font-family: inherit;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.search-bar:focus {
+    border-color: var(--lightgreen); /* Highlights green when typing */
+}
+
+.search-bar::placeholder {
+    color: var(--text-muted);
+}
+
+/* --- Dynamic JavaScript Classes --- */
+
+/* 1. Message Tiles */
+.message-tile {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: var(--white);
+    border: 1px solid var(--offwhite-dark);
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.message-tile:hover {
+    background-color: var(--offwhite-dark);
+}
+
+.message-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background-color: var(--primary); /* Placeholder for an image */
+    flex-shrink: 0;
+}
+
+.message-content hstrong {
+    color: var(--text-dark);
+    font-size: 1rem;
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+.message-content p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* 2. Friend Items */
+.friend-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid var(--offwhite-dark);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-radius: 8px; /* Softens the hover area */
+}
+
+.friend-item:hover {
+    background-color: var(--offwhite-dark);
+}
+
+.friend-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: var(--primary); /* Placeholder */
+    flex-shrink: 0;
+}
+
+.friend-name {
+    color: var(--text-mid);
+    font-weight: 500;
 }
