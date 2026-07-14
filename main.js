@@ -174,7 +174,7 @@ io.on('connection',function(client){
         if (user==null){
             callback(false,'User session expired, please refresh your page.')
         } else {
-            const message = {author:user,content:sanitize(post).replace('\n','<br>')}
+            const message = {author:user,content:sanitize(post).replaceAll('\n','<br>')}
             console.log(message)
             dbQuery(user).then(userdata => {
                 userdata.network.friends.forEach(friend => {
