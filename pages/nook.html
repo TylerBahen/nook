@@ -15,7 +15,7 @@
         <a href="#" class="nav-logo">n<span>oo</span>k</a>
         <div class="nav-actions">
             <span id="user-display-name" class="username">Loading...</span>
-            <button id="profile-toggle-btn" class="profile-icon" aria-label="Open Profile">
+            <button id="profile-toggle-btn" class="profile-icon" aria-label="Log Out" onclick="logout()">
                 <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
@@ -29,35 +29,38 @@
             <h2>Messages</h2>
             
             <div id="messages-container">
-                <div class="message-tile">
+                <!--<div class="message-tile">
                     <div class="message-avatar"></div>
                     <div class="message-content">
                         <strong>Loading...</strong>
                         <p></p>
-                    </div>
+                    </div>-->
                 </div>
             </div>
 
-            <button id="new-message-btn" class="fab" aria-label="Create New Message">+</button>
+            <button id="new-message-btn" class="fab" aria-label="Create New Message" onclick="openpopup()">+</button>
         </section>
 
         <section id="friends-section" class="panel">
             <h2>Friends</h2>
             
             <div class="search-container">
-                <input type="text" id="friend-search" class="search-bar" placeholder="Find new friends...">
+                <input type="text" id="friend-search" class="search-bar" placeholder="Add your people...">
+                <button id="add-friend-btn" class="add-btn" aria-label="Add Friend" onclick="friendRequest()">+</button>
             </div>
 
             <ul id="friends-list">
-                <li class="friend-item">
-                    <div class="friend-avatar"></div>
-                    <span class="friend-name"></span>
-                </li>
-            </ul>
+                </ul>
         </section>
     </main>
 
     <footer>
         </footer>
+    <div id="blanket" onclick="closepopup()"></div>
+    <div class="popup" id="postBox">
+        <h1>New Post</h1>
+        <p><textarea type="text" id="postBody"></textarea></p>
+        <button onclick="post()">Post</button>
+    </div>
 </body>
 </html>

@@ -126,6 +126,8 @@ io.on('connection',function(client){
             callback(false,'User session expired, please refresh your page.')
         } else if (target==user){
             callback(false,'You cannot friend yourself.')
+        } else if (target=='' || typeof target!='string'){
+            callback(false,'Please enter a name.')
         } else {
             console.log(`${user} is sending a friend request to ${target}`)
             dbQuery(target).then((targetdata) => {
@@ -172,7 +174,7 @@ io.on('connection',function(client){
         if (user==null){
             callback(false,'User session expired, please refresh your page.')
         } else {
-            const message = {author:user,content:sanitize(post)}
+            const message = {author:user,content:sanitize(post).replace('\n','<br>')}
             console.log(message)
             dbQuery(user).then(userdata => {
                 userdata.network.friends.forEach(friend => {

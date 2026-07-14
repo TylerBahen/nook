@@ -262,6 +262,113 @@ footer {
     font-weight: 500;
 }
 
-pre {
+textarea {
     font-family: 'Nunito Sans', sans-serif;
+    max-width: 100%;
+    min-width: 100%;
+    height: 10em;
+    max-height: 20em;
+    min-height: 5em;
+}
+
+.popup{
+    width: calc(100% - 100px);
+    height: fit-content;
+    max-height: 80%;
+    max-width: 900px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    padding: 20px;
+    transform: translate(-50%, -50%);
+    background-color: var(--white);
+    border: solid 3px var(--primary);
+    border-radius: 10px;
+    visibility: hidden;
+    z-index: 101;
+}
+
+.popup button {
+    background-color: var(--primary);
+    color: var(--white);
+}
+
+.popup button:hover {
+    background-color: var(--darkgreen);
+    color: var(--white);
+}
+
+textarea,
+.popup button {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: solid 1px var(--lightgreen);
+    color: var(--darkgreen);
+}
+
+
+#blanket {
+    margin: 0;
+    position:fixed;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    visibility: hidden;
+    z-index: 100;
+}
+
+/* --- Updated Search Container --- */
+.search-container {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 0.5rem; /* Creates a small gap between the input and button */
+    align-items: center; /* Keeps them vertically aligned */
+}
+
+/* Ensure the search bar takes up remaining space */
+.search-bar {
+    flex: 1; 
+    /* (Keep your existing padding, border, etc. here) */
+    padding: 0.6rem 1rem;
+    border: 2px solid var(--offwhite-dark);
+    border-radius: 20px;
+    background-color: var(--white);
+    color: var(--text-dark);
+    font-family: inherit;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+/* --- New Add Button (+) --- */
+.add-btn {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0; /* Prevents the button from shrinking if the container gets small */
+    border-radius: 50%;
+    background-color: var(--primary);
+    color: var(--darkgreen);
+    border: 2px solid var(--lightgreen);
+    font-size: 1.2rem;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.add-btn:hover {
+    background-color: var(--darkgreen);
+    border-color: var(--darkgreen);
+    color: var(--white);
+}
+
+ul {
+    padding: 0;
 }
