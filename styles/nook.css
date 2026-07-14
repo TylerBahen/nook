@@ -1,8 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Coming+Soon&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
+
 /* --- Global Reset & Layout --- */
 body {
     margin: 0;
     padding: 0;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: 'Nunito Sans', sans-serif;
     background-color: var(--white);
     color: var(--text-dark);
     display: flex;
@@ -258,4 +260,8 @@ footer {
 .friend-name {
     color: var(--text-mid);
     font-weight: 500;
+}
+
+pre {
+    font-family: 'Nunito Sans', sans-serif;
 }
